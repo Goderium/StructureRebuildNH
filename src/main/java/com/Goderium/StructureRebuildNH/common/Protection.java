@@ -28,8 +28,10 @@ public final class Protection {
                 || RebuildConfig.protectedBlocks.contains(key)
                 || RebuildConfig.protectedBlocks.contains(key + "@" + world.getBlockMetadata(x, y, z))) return true;
         }
-        TileEntity tile = world.getTileEntity(x, y, z);
-        if (tile == null) return false;
+        // World.getTileEntity may create a missing tile via setTileEntity, re-entering our write guard.
+        // Inspect the existing tile only; an unresolved tile-bearing block is conservatively protected.
+        TileEntity tile = world.getChunkFromBlockCoords(x, z).getTileEntityUnsafe(x & 15, y, z & 15);
+        if (tile == null) return block.hasTileEntity(world.getBlockMetadata(x, y, z));
         if (tile instanceof IInventory || tile instanceof IFluidHandler || RebuildConfig.protectTileEntities) return true;
         if (tile instanceof IGregTechTileEntity) {
             Object meta = ((IGregTechTileEntity) tile).getMetaTileEntity();
