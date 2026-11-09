@@ -1,6 +1,8 @@
 package com.Goderium.StructureRebuildNH;
 
 import com.Goderium.StructureRebuildNH.config.RebuildConfig;
+import com.Goderium.StructureRebuildNH.common.RebuildEngine;
+import com.gtnewhorizon.structurelib.StructureLibAPI;
 
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
@@ -13,5 +15,7 @@ public class StructureRebuildNH {
     public static final Logger LOG = LogManager.getLogger("StructureRebuildNH");
     @Mod.EventHandler public void preInit(FMLPreInitializationEvent event) {
         RebuildConfig.load(event.getSuggestedConfigurationFile());
+        StructureLibAPI.registerChannelDescription(
+            RebuildEngine.REBUILD_CHANNEL, "structurerebuildnh", "structurerebuildnh.channel.rebuild");
     }
 }
