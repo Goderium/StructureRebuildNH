@@ -1,0 +1,35 @@
+plugins {
+    id 'java'
+    id 'com.gtnewhorizons.retrofuturagradle' version '2.0.2'
+}
+group = 'com.Goderium.StructureRebuildNH'
+version = '0.1.0'
+java { toolchain { languageVersion = JavaLanguageVersion.of(8) } }
+minecraft {
+    mcVersion = '1.7.10'
+    javaCompatibilityVersion = 8
+    jvmLanguageVersion = JavaLanguageVersion.of(8)
+    mcpMappingChannel = 'stable'
+    mcpMappingVersion = '12'
+    useForgeEmbeddedMappings = false
+    injectMissingGenerics = false
+}
+repositories {
+    mavenCentral()
+    maven { url = 'https://nexus.gtnewhorizons.com/repository/public/' }
+}
+dependencies {
+    compileOnly('com.github.GTNewHorizons:GT5-Unofficial:5.09.54.265:dev') { transitive = false }
+    compileOnly('com.github.GTNewHorizons:Applied-Energistics-2-Unofficial:rv3-beta-1095-GTNH:dev') { transitive = false }
+    compileOnly('com.github.GTNewHorizons:StructureLib:1.4.46:dev') { transitive = false }
+    compileOnly('com.github.GTNewHorizons:GTNHLib:0.11.54:dev') { transitive = false }
+    compileOnly('com.github.GTNewHorizons:ModularUI:1.3.4:dev') { transitive = false }
+    compileOnly('com.github.GTNewHorizons:ModularUI2:2.3.92-1.7.10:dev') { transitive = false }
+    compileOnly(files(providers.gradleProperty('uniMixinsJar').get()))
+}
+tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8'; options.compilerArgs += ['-proc:none'] }
+tasks.processResources { filesMatching('mcmod.info') { expand(version: project.version) } }
+tasks.jar {
+    manifest.attributes('FMLCorePlugin': 'com.Goderium.StructureRebuildNH.loader.EarlyLoader',
+        'FMLCorePluginContainsFMLMod': 'true', 'ForceLoadAsMod': 'true')
+}

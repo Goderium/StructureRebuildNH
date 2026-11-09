@@ -1,0 +1,1 @@
+[{"modid":"structurerebuildnh","name":"StructureRebuildNH","description":"A GTNH blueprint addon. Set rebuild=1 to clear ordinary blocks before creative structure placement, with configurable protection for containers, whitelisted mods and other formed GT structures.","version":"${version}","mcversion":"1.7.10","authorList":["Goderium"]}]
