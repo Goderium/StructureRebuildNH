@@ -1,6 +1,7 @@
 package com.Goderium.StructureRebuildNH.common;
 
 import com.Goderium.StructureRebuildNH.util.Bounds;
+import com.Goderium.StructureRebuildNH.util.RebuildLog;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -48,25 +49,37 @@ public final class FormationTracker {
         if (record.legacy != null) record.add(record.legacy);
         if (!record.pieces.isEmpty()) RECORDS.put(owner, record);
     }
-    public static List<Bounds> protectedVolumes(World world, TileEntity target, List<Bounds> requested) {
+    public static List<Bounds> protectedVolumes(World world, TileEntity target, List<Bounds> requested, RebuildLog log) {
         List<Bounds> result = new ArrayList<Bounds>();
+        int controllers = 0;
         for (Object object : new ArrayList<Object>(world.loadedTileEntityList)) {
             if (!(object instanceof IGregTechTileEntity) || object == target) continue;
             IGregTechTileEntity tile = (IGregTechTileEntity) object;
             if (tile.getWorld() != world || ((TileEntity) object).isInvalid()
                 || !(tile.getMetaTileEntity() instanceof MTEMultiBlockBase)) continue;
             MTEMultiBlockBase owner = (MTEMultiBlockBase) tile.getMetaTileEntity();
-            if (!owner.mMachine) continue;
+            controllers++;
+            String identity = owner.getClass().getName() + " at=" + tile.getXCoord() + "," + tile.getYCoord() + "," + tile.getZCoord();
+            log.line("GT_MACHINE " + identity + " formed=" + owner.mMachine + " facing=" + orientation(owner));
+            if (!owner.mMachine) {
+                log.line("GT_STRUCTURE_NOT_PROTECTED " + identity + " reason=not_formed; controller_block_remains_protected");
+                continue;
+            }
             Record record = RECORDS.get(owner);
             if (record == null || record.world.get() != world || record.x != tile.getXCoord() || record.y != tile.getYCoord()
                 || record.z != tile.getZCoord() || record.facing != orientation(owner)) {
                 throw new IllegalStateException("Formed GT machine at " + tile.getXCoord() + "," + tile.getYCoord()
                     + "," + tile.getZCoord() + " has no current geometry; wait for its native structure recheck");
             }
+            log.line("GT_GEOMETRY " + identity + " pieces=" + record.pieces.size());
+            int before = result.size();
             for (Bounds b : record.pieces) for (Bounds selected : requested) if (b.intersects(selected)) {
+                log.line("GT_STRUCTURE_PROTECTED " + identity + " bounds=" + b);
                 result.add(b); break;
             }
+            if (result.size() == before) log.line("GT_STRUCTURE_OUTSIDE " + identity + " reason=no_intersection");
         }
+        log.checkpoint("GT_SCAN_END otherControllers=" + controllers + " protectedRegions=" + result.size());
         return result;
     }
 }

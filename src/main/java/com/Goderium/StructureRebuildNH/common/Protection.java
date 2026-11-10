@@ -18,25 +18,37 @@ import gregtech.api.metatileentity.implementations.MTEMultiBlockBase;
 
 public final class Protection {
     public static boolean protects(World world, int x, int y, int z, TileEntity target, List<Bounds> formed) {
-        if (target != null && x == target.xCoord && y == target.yCoord && z == target.zCoord) return true;
-        for (Bounds bounds : formed) if (bounds.contains(x, y, z)) return true;
+        return reason(world, x, y, z, target, formed) != null;
+    }
+    /** Null means unprotected. The reason is diagnostic only and does not perform a structure check. */
+    public static String reason(World world, int x, int y, int z, TileEntity target, List<Bounds> formed) {
+        if (target != null && x == target.xCoord && y == target.yCoord && z == target.zCoord) return "target_controller";
+        for (Bounds bounds : formed) if (bounds.contains(x, y, z)) return "formed_gt_structure:" + bounds;
         Block block = world.getBlock(x, y, z);
         GameRegistry.UniqueIdentifier id = GameRegistry.findUniqueIdentifierFor(block);
         if (id != null) {
             String key = id.toString().toLowerCase(Locale.ROOT);
-            if (RebuildConfig.protectedMods.contains(id.modId.toLowerCase(Locale.ROOT))
-                || RebuildConfig.protectedBlocks.contains(key)
-                || RebuildConfig.protectedBlocks.contains(key + "@" + world.getBlockMetadata(x, y, z))) return true;
+            if (RebuildConfig.protectedMods.contains(id.modId.toLowerCase(Locale.ROOT))) return "mod_whitelist:" + id.modId;
+            if (RebuildConfig.protectedBlocks.contains(key)) return "block_whitelist:" + key;
+            String variant = key + "@" + world.getBlockMetadata(x, y, z);
+            if (RebuildConfig.protectedBlocks.contains(variant)) return "block_whitelist:" + variant;
         }
         // World.getTileEntity may create a missing tile via setTileEntity, re-entering our write guard.
-        // Inspect the existing tile only; an unresolved tile-bearing block is conservatively protected.
+        // Inspect an existing tile, or a detached factory result without installing it in the world.
+        // Some BlockContainer variants declare tiles but legitimately return null for decorative metadata.
         TileEntity tile = world.getChunkFromBlockCoords(x, z).getTileEntityUnsafe(x & 15, y, z & 15);
-        if (tile == null) return block.hasTileEntity(world.getBlockMetadata(x, y, z));
-        if (tile instanceof IInventory || tile instanceof IFluidHandler || RebuildConfig.protectTileEntities) return true;
+        int metadata = world.getBlockMetadata(x, y, z);
+        if (tile == null && block.hasTileEntity(metadata)) tile = block.createTileEntity(world, metadata);
+        if (tile == null) return null;
         if (tile instanceof IGregTechTileEntity) {
             Object meta = ((IGregTechTileEntity) tile).getMetaTileEntity();
-            if (meta instanceof MTEHatch || meta instanceof MTEMultiBlockBase) return true;
+            if (meta instanceof MTEHatch) return "gt_hatch:" + meta.getClass().getName();
+            if (meta instanceof MTEMultiBlockBase) return "gt_controller:" + meta.getClass().getName()
+                + ":formed=" + ((MTEMultiBlockBase) meta).mMachine;
         }
-        return false;
+        if (tile instanceof IInventory) return "inventory:" + tile.getClass().getName();
+        if (tile instanceof IFluidHandler) return "fluid_handler:" + tile.getClass().getName();
+        if (RebuildConfig.protectTileEntities) return "all_tile_entities:" + tile.getClass().getName();
+        return null;
     }
 }

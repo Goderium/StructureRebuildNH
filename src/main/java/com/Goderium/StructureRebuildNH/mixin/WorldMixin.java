@@ -15,10 +15,18 @@ public abstract class WorldMixin {
     @Inject(method = {"setBlock(IIILnet/minecraft/block/Block;II)Z", "func_147465_d(IIILnet/minecraft/block/Block;II)Z"},
         at = @At("HEAD"), cancellable = true, require = 1, allow = 1, remap = false)
     private void rebuild$set(int x, int y, int z, Block block, int meta, int flags, CallbackInfoReturnable<Boolean> cir) {
+        WorldHooks.WriteObserver observer = WorldHooks.TRACE.get();
+        if (observer != null) observer.before((World) (Object) this, x, y, z, block, meta, flags);
         WorldHooks.WriteGuard guard = WorldHooks.WRITE.get();
         if (guard == null) return;
         Boolean result = guard.setBlock((World) (Object) this, x, y, z, block, meta, flags);
         if (result != null) cir.setReturnValue(result);
+    }
+    @Inject(method = {"setBlock(IIILnet/minecraft/block/Block;II)Z", "func_147465_d(IIILnet/minecraft/block/Block;II)Z"},
+        at = @At("RETURN"), require = 1, remap = false)
+    private void rebuild$setResult(int x, int y, int z, Block block, int meta, int flags, CallbackInfoReturnable<Boolean> cir) {
+        WorldHooks.WriteObserver observer = WorldHooks.TRACE.get();
+        if (observer != null) observer.after((World) (Object) this, x, y, z, cir.getReturnValue());
     }
     @Inject(method = {"getBlock(III)Lnet/minecraft/block/Block;", "func_147439_a(III)Lnet/minecraft/block/Block;"},
         at = @At("HEAD"), require = 1, allow = 1, remap = false)

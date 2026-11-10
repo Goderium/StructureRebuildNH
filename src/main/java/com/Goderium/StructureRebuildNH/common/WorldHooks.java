@@ -14,6 +14,11 @@ public final class WorldHooks {
         Boolean setBlock(World world, int x, int y, int z, Block block, int meta, int flags);
         boolean protect(World world, int x, int y, int z);
     }
+    public interface WriteObserver {
+        void before(World world, int x, int y, int z, Block block, int meta, int flags);
+        void after(World world, int x, int y, int z, boolean success);
+    }
     public static final ThreadLocal<ReadObserver> READ = new ThreadLocal<ReadObserver>();
     public static final ThreadLocal<WriteGuard> WRITE = new ThreadLocal<WriteGuard>();
+    public static final ThreadLocal<WriteObserver> TRACE = new ThreadLocal<WriteObserver>();
 }

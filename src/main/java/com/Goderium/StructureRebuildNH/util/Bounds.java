@@ -12,6 +12,12 @@ public final class Bounds {
         return new Bounds(Math.min(minX, b.minX), Math.min(minY, b.minY), Math.min(minZ, b.minZ),
             Math.max(maxX, b.maxX), Math.max(maxY, b.maxY), Math.max(maxZ, b.maxZ));
     }
+    /** One enclosing cuboid, including empty space between individual structure pieces. */
+    public static Bounds enclosing(Iterable<Bounds> pieces) {
+        Bounds result = null;
+        for (Bounds piece : pieces) result = result == null ? piece : result.union(piece);
+        return result;
+    }
     public boolean contains(int x, int y, int z) {
         return x >= minX && x <= maxX && y >= minY && y <= maxY && z >= minZ && z <= maxZ;
     }
@@ -22,6 +28,9 @@ public final class Bounds {
     public long volume() {
         return Math.multiplyExact(Math.multiplyExact((long) maxX - minX + 1, (long) maxY - minY + 1),
             (long) maxZ - minZ + 1);
+    }
+    @Override public String toString() {
+        return "[" + minX + "," + minY + "," + minZ + "]..[" + maxX + "," + maxY + "," + maxZ + "]";
     }
     @Override public boolean equals(Object o) {
         if (!(o instanceof Bounds)) return false;

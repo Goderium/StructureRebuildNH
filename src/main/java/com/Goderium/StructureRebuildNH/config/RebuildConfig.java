@@ -7,8 +7,10 @@ import java.util.Set;
 import net.minecraftforge.common.config.Configuration;
 
 public final class RebuildConfig {
-    public static boolean enabled = true, protectTileEntities = true;
+    public static boolean enabled = true, protectTileEntities = false;
     public static int maxVolume = 4000000;
+    public static boolean writeDebugLogs = true, logBlockDecisions = true;
+    public static File logDirectory;
     public static Set<String> protectedMods = new HashSet<String>();
     public static Set<String> protectedBlocks = new HashSet<String>();
     public static Set<String> excludedControllers = new HashSet<String>();
@@ -17,10 +19,15 @@ public final class RebuildConfig {
         cfg.load();
         enabled = cfg.getBoolean("enabled", "general", true,
             "Allow creative sneaking blueprint rebuild ONLY with an explicit rebuild=1 subchannel. Without that channel, native placement is unchanged. False disables rebuilding for every blueprint.");
-        protectTileEntities = cfg.getBoolean("protectAllTileEntities", "protection", true,
-            "Conservative default protects unknown containers and AE addons too. Inventory/fluid handlers and GT controllers/hatches are always protected.");
+        protectTileEntities = cfg.getBoolean("protectAllTileEntities", "protection", false,
+            "Optional protection of every block entity. False allows ordinary structure block entities to clear. Whitelists, inventory/fluid handlers and GT controllers/hatches remain protected.");
         maxVolume = cfg.getInt("maxVisitedBlocks", "general", 4000000, 1, 50000000,
-            "Maximum sum of selected piece volumes. Abort BEFORE clearing if exceeded, out of height, or any chunk is unloaded.");
+            "Maximum volume of the enclosing cuboid of all selected pieces, including gaps. Abort BEFORE clearing if exceeded, out of height, or any chunk is unloaded.");
+        logDirectory = new File(file.getAbsoluteFile().getParentFile().getParentFile(), "logs/structurerebuildnh");
+        writeDebugLogs = cfg.getBoolean("writeDebugLogs", "logging", true,
+            "Write one UTF-8 report per rebuild in logs/structurerebuildnh: target, configuration, geometry, formation, phases, counts and exceptions.");
+        logBlockDecisions = cfg.getBoolean("logBlockDecisions", "logging", true,
+            "Include every non-air clear/protect decision and native placement write/result. Large rebuilds produce large files. False keeps summaries and machine/geometry diagnostics.");
         protectedMods = lower(cfg.getStringList("modWhitelist", "protection", new String[] {
             "appliedenergistics2", "ae2fc", "thaumicenergistics", "ae2wct", "betterp2p", "neenergistics",
             "extracells", "ae2stuff", "ae2extras", "ae2utilities", "avaritiaddons", "IronChest", "JABBA",
