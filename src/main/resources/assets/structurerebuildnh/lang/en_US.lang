@@ -1,1 +1,1 @@
-structurerebuildnh.channel.rebuild=Set to 1 to clear the structure area before creative sneaking blueprint placement. Remove this channel to disable.
+structurerebuildnh.channel.rebuild=Set to 1 to enable. Creative sneak-use clears the structure area before placement. Remove the channel to disable.

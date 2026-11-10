@@ -1,1 +1,1 @@
-structurerebuildnh.channel.rebuild=设为 1 后，创造模式潜行使用蓝图时先清理再建造。删除此信道可关闭。
+structurerebuildnh.channel.rebuild=设为1启用重建。创造模式潜行使用蓝图时，先清理再放置。删除信道关闭。
