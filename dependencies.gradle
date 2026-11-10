@@ -1,0 +1,11 @@
+// Fixed compile-time APIs; GTNH supplies these mods at runtime.
+// Dependencies are downloaded from repositories.gradle, not bundled into this mod.
+dependencies {
+    compileOnly('com.github.GTNewHorizons:GT5-Unofficial:5.09.54.265:dev') { transitive = false }
+    compileOnly('com.github.GTNewHorizons:Applied-Energistics-2-Unofficial:rv3-beta-1095-GTNH:dev') { transitive = false }
+    compileOnly('com.github.GTNewHorizons:StructureLib:1.4.46:dev') { transitive = false }
+    compileOnly('com.github.GTNewHorizons:GTNHLib:0.11.54:dev') { transitive = false }
+    compileOnly('com.github.GTNewHorizons:ModularUI:1.3.4:dev') { transitive = false }
+    compileOnly('com.github.GTNewHorizons:ModularUI2:2.3.92-1.7.10:dev') { transitive = false }
+    compileOnly('io.github.legacymoddingmc:unimixins:0.3.1:dev') { transitive = false }
+}

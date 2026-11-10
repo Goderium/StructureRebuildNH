@@ -9,7 +9,7 @@ import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-@Mod(modid = "structurerebuildnh", name = "StructureRebuildNH", version = "0.1.0",
+@Mod(modid = "structurerebuildnh", name = "StructureRebuildNH", version = Tags.VERSION,
     dependencies = "required-after:gregtech;required-after:structurelib", acceptableRemoteVersions = "*")
 public class StructureRebuildNH {
     public static final Logger LOG = LogManager.getLogger("StructureRebuildNH");

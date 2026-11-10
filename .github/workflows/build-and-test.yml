@@ -1,0 +1,76 @@
+name: Build and test
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+  workflow_dispatch:
+  workflow_call:
+    outputs:
+      version:
+        description: Mod version built from gradle.properties
+        value: ${{ jobs.build.outputs.version }}
+      jar_name:
+        description: Release JAR filename
+        value: ${{ jobs.build.outputs.jar_name }}
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    outputs:
+      version: ${{ steps.metadata.outputs.version }}
+      jar_name: ${{ steps.metadata.outputs.jar_name }}
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Check version and release tag
+        id: metadata
+        shell: bash
+        env:
+          BUILD_REF: ${{ github.ref }}
+        run: |
+          set -euo pipefail
+          version="$(sed -nE 's/^modVersion[[:space:]]*=[[:space:]]*([^[:space:]]+)[[:space:]]*$/\1/p' gradle.properties)"
+          name="$(sed -nE 's/^modName[[:space:]]*=[[:space:]]*([^[:space:]]+)[[:space:]]*$/\1/p' gradle.properties)"
+          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::modVersion must be a version such as 0.1.0 or 0.1.0-beta.1."
+            exit 1
+          fi
+          if [[ ! "$name" =~ ^[A-Za-z][A-Za-z0-9_-]*$ ]]; then
+            echo "::error::Invalid modName."
+            exit 1
+          fi
+          if [[ "$BUILD_REF" == refs/tags/* && "$BUILD_REF" != "refs/tags/v$version" ]]; then
+            echo "::error::Release tag must match modVersion: expected v$version."
+            exit 1
+          fi
+          printf 'version=%s\njar_name=%s-%s.jar\n' "$version" "$name" "$version" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Java
+        uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
+        with:
+          distribution: temurin
+          java-version-file: .java-version
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
+        with:
+          cache-provider: basic
+
+      - name: Build
+        run: bash gradlew --no-daemon --console=plain build
+
+      - name: Upload JAR
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: mod-jar
+          path: build/libs/${{ steps.metadata.outputs.jar_name }}
+          if-no-files-found: error
+          retention-days: 14
